@@ -25,10 +25,12 @@
 
   )
 
+(def ^:dynamic *context* "clojure")
+
 (defn create-deftest-opening
   [test-name]
   (ast/first-form-vec
-   (str "(clojure.test/deftest " test-name " )")))
+   (str "(" *context* ".test/deftest " test-name " )")))
 
 (comment
 
@@ -93,7 +95,7 @@
 
 (defn create-is-form
   [actual-node expected-node]
-  (conj (ast/first-form-vec "(clojure.test/is )")
+  (conj (ast/first-form-vec (str "(" *context* ".test/is )"))
         (create-equals-form expected-node actual-node)))
 
 (comment
@@ -499,6 +501,11 @@
              "     (run! (fn [test-name]"
              "             (ns-unmap *ns* test-name))))"])))
 
+(defn remove-existing-tests-form-cljs
+  []
+  (ast/first-form
+   "(alc.x-as-tests.cljs.immediate/remove-tests)"))
+
 (comment
 
   (re-matches #"^test-at-line-.*"
@@ -524,6 +531,11 @@
   []
   (ast/first-form "(require 'clojure.test)"))
 
+(defn require-form-cljs
+  []
+  (ast/first-form "(require 'cljs.test)
+(require-macros 'alc.x-as-tests.cljs.immediate)"))
+
 (comment
 
   (ast/to-str [(require-form)])
@@ -546,8 +558,12 @@
                   "        (sort (keys (ns-interns *ns*)))))"
                   "    @clojure.test/*report-counters*))"])))
 
-(comment
+(defn run-tests-cljs
+  []
+  (ast/first-form
+   (cs/join "\n" ["(cljs.test/run-tests)"])))
 
+(comment
   (run-tests-with-summary-form)
   #_ '(:list
        (:symbol "clojure.test/do-report") (:whitespace "\n  ")
@@ -745,8 +761,38 @@
            (into test-prep-forms
                  without-prep-forms)))))))
 
-(comment
+(defn run-tests-form?
+  [ast]
+  (and (ast/list-node? ast)
+       (ast/symbol-node? (ast/list-head ast))
+       (= "run-tests!" (ast/symbol-name (ast/list-head ast)))))
 
+(defn rewrite-with-tests-cljs
+  [src]
+  (binding [*context* "cljs"]
+    (let [nls (ast/first-form "\n\n")
+          test-prep-forms [nls
+                           (remove-existing-tests-form-cljs)
+                           nls
+                           (require-form-cljs)]
+          test-summary-forms [nls
+                              (run-tests-cljs)
+                              nls]]
+      (ast/update-forms-and-format
+       src
+       (fn [nodes]
+         (let [nodes (filter #(not (run-tests-form? %)) nodes)
+               without-prep-forms
+               (into (rewrite-comment-blocks-with-tests nodes)
+                     test-summary-forms)]
+           (if (ast/has-ns-ish-form? nodes)
+             (splice-after-ns-ish-form without-prep-forms
+                                       test-prep-forms)
+             ;; no ns or in-ns form
+             (into test-prep-forms
+                   without-prep-forms))))))))
+
+(comment
   (rewrite-with-tests
    (cs/join "\n"
             ["(ns my.ns)"
