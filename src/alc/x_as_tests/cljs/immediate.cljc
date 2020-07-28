@@ -1,5 +1,6 @@
 (ns alc.x-as-tests.cljs.immediate
-  (:require #?@(:clj [[alc.x-as-tests.impl.rewrite :as rewrite]
+  (:require [cljs.test]
+            #?@(:clj [[alc.x-as-tests.impl.rewrite :as rewrite]
                       [cljs.analyzer :as ana]])))
 
 (def ^:dynamic *rewrite* true) 
