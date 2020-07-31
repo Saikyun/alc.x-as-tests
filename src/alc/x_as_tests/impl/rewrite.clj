@@ -943,8 +943,44 @@
                           (rewrite-with-tests (slurp path))
                           ")"))))
 
-(comment
+(defn rewrite-without-non-comment-blocks
+  [src]
+  (let [nls (ast/first-form "\n\n")
+        test-prep-forms [nls
+                         (remove-existing-tests-form)
+                         nls
+                         (require-form)]
+        test-summary-forms [nls
+                            (run-tests-with-summary-form)
+                            nls]]
+    (ast/update-forms-and-format
+     src
+     (fn [nodes]
+       (into test-prep-forms
+             (into (rewrite-comment-blocks-with-tests
+                    (filter ast/comment-block? nodes))
+                   test-summary-forms))))))
 
+(defn rewrite-without-non-comment-blocks-cljs
+  [src]
+  (binding [*context* "cljs"]
+    (let [nls (ast/first-form "\n\n")
+          test-prep-forms [nls
+                           (remove-existing-tests-form-cljs)
+                           nls
+                           (require-form-cljs)]
+          test-summary-forms [nls
+                              (run-tests-cljs)
+                              nls]]
+      (ast/update-forms-and-format
+       src
+       (fn [nodes]
+         (into test-prep-forms
+               (into (rewrite-comment-blocks-with-tests
+                      (filter ast/comment-block? nodes))
+                     test-summary-forms)))))))
+
+(comment
   ;; don't want this running automatically
   (comment
 

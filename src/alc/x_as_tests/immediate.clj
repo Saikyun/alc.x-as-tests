@@ -1,11 +1,8 @@
-(ns alc.x-as-tests.immediate)
-
-
-(def ^:dynamic *rewrite* true)
+(ns alc.x-as-tests.immediate
+  (:require [alc.x-as-tests.impl.rewrite :as rewrite]))
 
 (defmacro run-tests!
   []
   (let [f *file*]
-    (when (and (not= "NO_SOURCE_PATH" *file*) *rewrite*)
-      `(binding [*rewrite* false]
-         (eval (read-string (str "(do " (rewrite/rewrite-with-tests (slurp ~f)) ")")))))))
+    (when (not= "NO_SOURCE_PATH" *file*)
+      (read-string (str "(do " (rewrite/rewrite-without-non-comment-blocks (slurp f)) ")")))))
