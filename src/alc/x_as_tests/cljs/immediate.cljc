@@ -1,11 +1,12 @@
 (ns alc.x-as-tests.cljs.immediate
   (:require [cljs.test]
-            [alc.x-as-tests.impl.rewrite :as rewrite]
-            [cljs.analyzer :as ana]))
+            [cljs.analyzer :as ana]
+            #?@(:clj [[alc.x-as-tests.impl.rewrite :as rewrite]
+                      [clojure.java.io :as io]])))
 
-(defmacro run-tests!
-  [path]
-  (read-string (str "(do " (rewrite/rewrite-without-non-comment-blocks-cljs (slurp path)) ")")))
+#?(:clj (defmacro run-tests!
+          []
+          (read-string (str "(do " (rewrite/rewrite-without-non-comment-blocks-cljs (slurp (io/resource ana/*cljs-file*))) ")"))))
 
 (defmacro remove-tests
   []
