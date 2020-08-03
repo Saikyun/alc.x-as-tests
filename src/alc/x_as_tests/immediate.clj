@@ -15,7 +15,7 @@
           (read-string (str "(do" (rewrite/rewrite-without-non-comment-blocks-cljs code) ")"))))
     (let [f *file*]
       (when (not= "NO_SOURCE_PATH" *file*)
-        (let [code (try (slurp f)
+        (let [code (try (slurp (io/resource f))
                         (catch Exception e
                           (println "Warning during `alc.x-as-tests.cljs.immediate/run-tests!` (clj)")
                           (println "Failed reading file: " f)

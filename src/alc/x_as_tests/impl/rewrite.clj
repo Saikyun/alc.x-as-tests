@@ -504,7 +504,7 @@
 (defn remove-existing-tests-form-cljs
   []
   (ast/first-form
-   "(alc.x-as-tests.cljs.immediate/remove-tests)"))
+   "(alc.x-as-tests.immediate/remove-tests)"))
 
 (comment
 
