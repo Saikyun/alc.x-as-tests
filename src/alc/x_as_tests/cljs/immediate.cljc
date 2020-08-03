@@ -6,7 +6,13 @@
 
 #?(:clj (defmacro run-tests!
           []
-          (read-string (str "(do " (rewrite/rewrite-without-non-comment-blocks-cljs (slurp (io/resource ana/*cljs-file*))) ")"))))
+          (let [code (try (slurp (io/resource ana/*cljs-file*))
+                          (catch Exception e
+                            (println "Warning during `alc.x-as-tests.cljs.immediate/run-tests!`")
+                            (println "Failed reading file: " ana/*cljs-file*)
+                            (println e)
+                            ""))]
+            `(do ~(read-string (rewrite/rewrite-without-non-comment-blocks-cljs code))))))
 
 (defmacro remove-tests
   []
