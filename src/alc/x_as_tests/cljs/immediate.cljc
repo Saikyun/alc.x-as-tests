@@ -12,7 +12,7 @@
                             (println "Failed reading file: " ana/*cljs-file*)
                             (println e)
                             ""))]
-            `(do ~(read-string (rewrite/rewrite-without-non-comment-blocks-cljs code))))))
+            (read-string (str "(do" (rewrite/rewrite-without-non-comment-blocks-cljs code) ")")))))
 
 (defmacro remove-tests
   []

@@ -12,4 +12,4 @@
                         (println "Failed reading file: " f)
                         (println e)
                         ""))]
-        `(do ~(read-string (rewrite/rewrite-without-non-comment-blocks code)))))))
+        (read-string (str "(do " (rewrite/rewrite-without-non-comment-blocks code) ")"))))))
