@@ -12,16 +12,18 @@
                           (println "Failed reading file: " cljs.analyzer/*cljs-file*)
                           (println e)
                           ""))]
-          (read-string (str "(do" (rewrite/rewrite-without-non-comment-blocks-cljs code) ")"))))
+          (read-string {:read-cond :allow}
+                       (str "(do" (rewrite/rewrite-without-non-comment-blocks-cljs code) ")"))))
     (let [f *file*]
       (when (not= "NO_SOURCE_PATH" *file*)
-        (let [code (try (slurp (io/resource f))
+        (let [code (try (slurp (or (io/resource f) f) )
                         (catch Exception e
                           (println "Warning during `alc.x-as-tests.cljs.immediate/run-tests!` (clj)")
                           (println "Failed reading file: " f)
                           (println e)
                           ""))]
-          (read-string (str "(do " (rewrite/rewrite-without-non-comment-blocks code) ")")))))))
+          (read-string {:read-cond :allow}
+                       (str "(do " (rewrite/rewrite-without-non-comment-blocks code) ")")))))))
 
 (defmacro remove-tests
   []
